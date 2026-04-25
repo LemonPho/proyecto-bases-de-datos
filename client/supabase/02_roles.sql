@@ -1,0 +1,85 @@
+-- ROLES BASE
+CREATE ROLE rol_visitante;
+CREATE ROLE rol_empleado;
+CREATE ROLE rol_admin;
+
+-- PERMISOS PARA VISITANTE
+-- Solo lectura de información pública
+
+GRANT CONNECT ON DATABASE refugio_db TO rol_visitante;
+GRANT USAGE ON SCHEMA public TO rol_visitante;
+
+GRANT SELECT ON
+    animales,
+    refugios,
+    areas_refugio,
+    razas,
+    especies,
+    galeria_fotos,
+    eventos,
+    categorias_eventos,
+    campañas_adopcion
+TO rol_visitante;
+
+-- PERMISOS PARA EMPLEADO
+-- Puede consultar e insertar/actualizar datos operativos
+
+GRANT CONNECT ON DATABASE refugio_db TO rol_empleado;
+GRANT USAGE ON SCHEMA public TO rol_empleado;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO rol_empleado;
+
+GRANT INSERT, UPDATE ON
+    animales,
+    galeria_fotos,
+    rescates,
+    solicitudes_adopcion,
+    entrevistas_adopcion,
+    adopciones,
+    contratos_adopcion,
+    seguimiento_post_adopcion,
+    historial_medico,
+    tratamientos,
+    registro_vacunacion,
+    inventario_suministros,
+    compras_suministros,
+    gastos_operativos,
+    donaciones,
+    eventos,
+    campañas_adopcion,
+    turnos_voluntariado
+TO rol_empleado;
+
+-- PERMISOS PARA ADMIN
+-- Control total
+
+GRANT CONNECT ON DATABASE refugio_db TO rol_admin;
+GRANT USAGE ON SCHEMA public TO rol_admin;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO rol_admin;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO rol_admin;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO rol_admin;
+
+-- USUARIOS LOGIN
+
+CREATE USER usuario_web WITH PASSWORD 'web123';
+CREATE USER empleado1 WITH PASSWORD 'empleado123';
+CREATE USER admin1 WITH PASSWORD 'admin123';
+
+GRANT rol_visitante TO usuario_web;
+GRANT rol_empleado TO empleado1;
+GRANT rol_admin TO admin1;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT ON TABLES TO rol_visitante;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT ON TABLES TO rol_empleado;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT INSERT, UPDATE ON TABLES TO rol_empleado;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT ALL ON TABLES TO rol_admin;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT ALL ON SEQUENCES TO rol_admin;
