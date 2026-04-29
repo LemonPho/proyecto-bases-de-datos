@@ -1,12 +1,16 @@
 // src/components/Register.jsx
 import { Link } from 'react-router-dom';
+import logo from '/Users/alli/proyecto-bases-de-datos/client/src/assets'
 
 export default function Register() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-      {/* Logo migo del PDF */}
+    <>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+        <img src={logo} alt="Logo" className="w-40 h-auto" />
+      </div>
+
       <div className="mb-8">
-        <span className="text-3xl font-black text-slate-800 tracking-tighter">migo</span> 
+        <span className="text-3xl font-black text-slate-800 tracking-tighter">migo</span>
       </div>
 
       <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
@@ -16,8 +20,8 @@ export default function Register() {
           {/* Campo Nombre Completo */}
           <div className="text-left">
             <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Nombre Completo</label> [cite: 15]
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
               placeholder="Tu nombre aquí"
             />
@@ -26,8 +30,8 @@ export default function Register() {
           {/* Campo Correo electrónico */}
           <div className="text-left">
             <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Correo electrónico</label> [cite: 16]
-            <input 
-              type="email" 
+            <input
+              type="email"
               className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
               placeholder="ejemplo@correo.com"
             />
@@ -36,15 +40,15 @@ export default function Register() {
           {/* Campo Contraseña */}
           <div className="text-left">
             <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Contraseña</label> [cite: 17]
-            <input 
-              type="password" 
+            <input
+              type="password"
               className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
               placeholder="••••••••"
             />
           </div>
 
           {/* Botón Registrarse */}
-          <button 
+          <button
             type="submit"
             className="w-full bg-slate-800 text-white font-bold py-4 rounded-full mt-6 shadow-lg shadow-slate-200 hover:bg-slate-700 active:scale-95 transition-all"
           >
@@ -67,9 +71,9 @@ export default function Register() {
           ¿Ya tienes una cuenta? {' '}
           <Link to="/login" className="text-slate-800 font-bold underline">
             Inicia sesión aquí
-          </Link> 
+          </Link>
         </p>
       </div>
-    </div>
+    </>
   );
 }
