@@ -1,6 +1,6 @@
 // src/components/Register.jsx
 import { Link } from 'react-router-dom';
-import logo from '/Users/alli/proyecto-bases-de-datos/client/src/assets'
+import logo from '../assets/logo.png';
 
 export default function Register() {
   return (
