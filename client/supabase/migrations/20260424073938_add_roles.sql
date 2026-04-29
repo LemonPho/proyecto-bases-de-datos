@@ -1,7 +1,19 @@
 -- ROLES BASE
-CREATE ROLE rol_visitante;
-CREATE ROLE rol_empleado;
-CREATE ROLE rol_admin;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_visitante') THEN
+        CREATE ROLE rol_visitante;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_empleado') THEN
+        CREATE ROLE rol_empleado;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_admin') THEN
+        CREATE ROLE rol_admin;
+    END IF;
+END;
+$$;
 
 -- PERMISOS PARA VISITANTE
 -- Solo lectura de información pública
@@ -58,9 +70,27 @@ GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO rol_admin;
 
 -- USUARIOS LOGIN
 
-CREATE USER usuario_web WITH PASSWORD 'web123';
-CREATE USER empleado1 WITH PASSWORD 'empleado123';
-CREATE USER admin1 WITH PASSWORD 'admin123';
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'usuario_web') THEN
+        CREATE USER usuario_web WITH PASSWORD 'web123';
+    ELSE
+        ALTER USER usuario_web WITH PASSWORD 'web123';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'empleado1') THEN
+        CREATE USER empleado1 WITH PASSWORD 'empleado123';
+    ELSE
+        ALTER USER empleado1 WITH PASSWORD 'empleado123';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'admin1') THEN
+        CREATE USER admin1 WITH PASSWORD 'admin123';
+    ELSE
+        ALTER USER admin1 WITH PASSWORD 'admin123';
+    END IF;
+END;
+$$;
 
 GRANT rol_visitante TO usuario_web;
 GRANT rol_empleado TO empleado1;
