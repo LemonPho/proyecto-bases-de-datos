@@ -23,18 +23,29 @@ export default function Home() {
           <a href="#">Eventos</a> {/* [cite: 5] */}
           <a href="#">Contacto</a> {/* [cite: 6] */}
           
-          {/* Sección condicional para usuarios logueados */}
-          {user && (
-            <div className="flex flex-col items-center gap-1 border-l pl-8 border-slate-200">
-              <Link to="/admin" className="font-bold text-slate-800 hover:text-slate-900 transition-colors">Cuenta</Link>
-              <button 
-                onClick={handleLogout}
-                className="text-[10px] uppercase font-bold text-red-500 hover:text-red-700 transition-colors"
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          )}
+          {/* Sección de autenticación */}
+          <div className="flex items-center gap-4 border-l pl-8 border-slate-200">
+            {user ? (
+              <>
+                <Link to="/admin" className="font-bold text-slate-800 hover:text-slate-900 transition-colors">
+                  {user.user_metadata?.nombre?.split(' ')[0] || 'Cuenta'}
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="text-slate-400 hover:text-red-500 transition-colors"
+                  title="Cerrar sesión"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="font-bold text-slate-800 hover:text-slate-900 transition-colors">
+                Iniciar sesión
+              </Link>
+            )}
+          </div>
         </div>
       </nav>
 
