@@ -1,3 +1,4 @@
+import logo from '../assets/logo.png';
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
@@ -15,16 +16,16 @@ export default function Login() {
     setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-      
+
       // Login exitoso
       navigate('/');
-      
+
     } catch (error) {
       setError(error.message || 'Error al iniciar sesión');
     } finally {
@@ -33,127 +34,72 @@ export default function Login() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Iniciar Sesión</h2>
-        {error && <div style={styles.error}>{error}</div>}
-        
-        <form onSubmit={handleLogin} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label htmlFor="email" style={styles.label}>Correo Electrónico</label>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+      <div className="mb-8 flex flex-col items-center">
+        <img src={logo} alt="Logo" className="w-40 h-auto" />
+        <span className="text-3xl font-black text-slate-800 tracking-tighter mt-2">migo</span>
+      </div>
+
+      <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+        <h2 className="text-2xl font-bold text-slate-800 mb-8 text-center">Inicia Sesión</h2>
+
+        {error && <div className="mb-6 p-4 text-sm font-semibold text-red-600 bg-red-50 rounded-2xl border border-red-100">{error}</div>}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          {/* Campo Correo electrónico */}
+          <div className="text-left">
+            <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Correo electrónico</label>
             <input
-              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={styles.input}
-              placeholder="correo@ejemplo.com"
+              className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              placeholder="ejemplo@correo.com"
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label htmlFor="password" style={styles.label}>Contraseña</label>
+          {/* Campo Contraseña */}
+          <div className="text-left">
+            <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Contraseña</label>
             <input
-              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={styles.input}
-              placeholder="********"
+              className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              placeholder="••••••••"
             />
           </div>
 
-          <button type="submit" disabled={loading} style={styles.button}>
+          {/* Botón Entrar */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-slate-800 text-white font-bold py-4 rounded-full mt-6 shadow-lg shadow-slate-200 hover:bg-slate-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {loading ? 'Iniciando...' : 'Entrar'}
           </button>
         </form>
-        
-        <p style={styles.footerText}>
-          ¿No tienes cuenta? <Link to="/register" style={styles.link}>Regístrate aquí</Link>
+
+        {/* Separador u opción de Google */}
+        <div className="mt-8 flex flex-col items-center gap-4">
+          <p className="text-xs font-bold text-slate-400 uppercase">o inicia con</p>
+          <button className="w-12 h-12 flex items-center justify-center border-2 border-slate-100 rounded-full hover:bg-slate-50 transition-colors">
+            <span className="text-xl font-black text-red-500">G</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Enlace para registrarse */}
+      <div className="mt-8">
+        <p className="text-sm text-slate-500 font-medium">
+          ¿No tienes cuenta? {' '}
+          <Link to="/registro" className="text-slate-800 font-bold underline">
+            Regístrate aquí
+          </Link>
         </p>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#f3f4f6',
-    padding: '20px'
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    padding: '40px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    width: '100%',
-    maxWidth: '400px'
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    marginBottom: '24px',
-    textAlign: 'center',
-    color: '#1f2937'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px'
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#4b5563'
-  },
-  input: {
-    padding: '10px 12px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-    fontSize: '16px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-  },
-  button: {
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    padding: '12px',
-    borderRadius: '6px',
-    border: 'none',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '8px',
-    transition: 'background-color 0.2s'
-  },
-  error: {
-    backgroundColor: '#fee2e2',
-    color: '#ef4444',
-    padding: '12px',
-    borderRadius: '6px',
-    marginBottom: '16px',
-    fontSize: '14px'
-  },
-  footerText: {
-    marginTop: '24px',
-    textAlign: 'center',
-    fontSize: '14px',
-    color: '#6b7280'
-  },
-  link: {
-    color: '#3b82f6',
-    textDecoration: 'none',
-    fontWeight: '500'
-  }
-};
