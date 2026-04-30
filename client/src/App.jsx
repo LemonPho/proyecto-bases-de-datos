@@ -4,6 +4,7 @@ import './App.css'
 
 import Home from './components/home';
 import Login from './components/Login';
+import Dashboard from './components/DashboardAdmin';
 import Register from './components/Register';
 
 function App() {
@@ -12,7 +13,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/registro" element={<Register />} />
+        <Route path="/admin" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   )

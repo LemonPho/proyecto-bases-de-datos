@@ -1,3 +1,4 @@
+import logo from '../assets/logo.png';
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
@@ -31,176 +32,89 @@ export default function Register() {
       });
 
       if (error) throw error;
-      
+
       setSuccess('Registro exitoso. Revisa tu correo para verificar la cuenta o inicia sesión.');
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-      
+
     } catch (error) {
       setError(error.message || 'Error al registrar el usuario');
     } finally {
       setLoading(false);
     }
   };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Registro de Usuario</h2>
-        {error && <div style={styles.error}>{error}</div>}
-        {success && <div style={styles.success}>{success}</div>}
-        
-        <form onSubmit={handleRegister} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label htmlFor="nombre" style={styles.label}>Nombre completo *</label>
+    <>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+        <img src={logo} alt="Logo" className="w-40 h-auto" />
+      </div>
+
+      <div className="mb-8">
+        <span className="text-3xl font-black text-slate-800 tracking-tighter">migo</span>
+      </div>
+
+      <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+        <h2 className="text-2xl font-bold text-slate-800 mb-8">Crea una cuenta</h2> [cite: 14]
+
+        <form className="space-y-4">
+          {/* Campo Nombre Completo */}
+          <div className="text-left">
+            <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Nombre Completo</label> [cite: 15]
             <input
-              id="nombre"
               type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              required
-              style={styles.input}
-              placeholder="Juan Pérez"
+              className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              placeholder="Tu nombre aquí"
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label htmlFor="telefono" style={styles.label}>Teléfono</label>
+          {/* Campo Correo electrónico */}
+          <div className="text-left">
+            <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Correo electrónico</label> [cite: 16]
             <input
-              id="telefono"
-              type="tel"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              style={styles.input}
-              placeholder="1234567890"
-            />
-          </div>
-
-          <div style={styles.inputGroup}>
-            <label htmlFor="email" style={styles.label}>Correo Electrónico *</label>
-            <input
-              id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={styles.input}
-              placeholder="correo@ejemplo.com"
+              className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              placeholder="ejemplo@correo.com"
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label htmlFor="password" style={styles.label}>Contraseña *</label>
+          {/* Campo Contraseña */}
+          <div className="text-left">
+            <label className="block text-xs font-bold text-slate-400 uppercase ml-4 mb-1">Contraseña</label> [cite: 17]
             <input
-              id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={styles.input}
-              placeholder="Mínimo 6 caracteres"
-              minLength={6}
+              className="w-full bg-slate-100 border-none rounded-full px-6 py-3 text-slate-700 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              placeholder="••••••••"
             />
           </div>
 
-          <button type="submit" disabled={loading} style={styles.button}>
-            {loading ? 'Registrando...' : 'Registrarse'}
-          </button>
+          {/* Botón Registrarse */}
+          <button
+            type="submit"
+            className="w-full bg-slate-800 text-white font-bold py-4 rounded-full mt-6 shadow-lg shadow-slate-200 hover:bg-slate-700 active:scale-95 transition-all"
+          >
+            Registrarse
+          </button> [cite: 18]
         </form>
-        
-        <p style={styles.footerText}>
-          ¿Ya tienes cuenta? <Link to="/login" style={styles.link}>Inicia sesión aquí</Link>
+
+        {/* Separador u opción de Google */}
+        <div className="mt-8 flex flex-col items-center gap-4">
+          <p className="text-xs font-bold text-slate-400 uppercase">o regístrate con</p>
+          <button className="w-12 h-12 flex items-center justify-center border-2 border-slate-100 rounded-full hover:bg-slate-50 transition-colors">
+            <span className="text-xl font-black text-red-500">G</span> [cite: 19]
+          </button>
+        </div>
+      </div>
+
+      {/* Enlace para iniciar sesión */}
+      <div className="mt-8">
+        <p className="text-sm text-slate-500 font-medium">
+          ¿Ya tienes una cuenta? {' '}
+          <Link to="/login" className="text-slate-800 font-bold underline">
+            Inicia sesión aquí
+          </Link>
         </p>
       </div>
-    </div>
+    </>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#f3f4f6',
-    padding: '20px'
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    padding: '40px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    width: '100%',
-    maxWidth: '400px'
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    marginBottom: '24px',
-    textAlign: 'center',
-    color: '#1f2937'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px'
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#4b5563'
-  },
-  input: {
-    padding: '10px 12px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-    fontSize: '16px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-  },
-  button: {
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    padding: '12px',
-    borderRadius: '6px',
-    border: 'none',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '8px',
-    transition: 'background-color 0.2s'
-  },
-  error: {
-    backgroundColor: '#fee2e2',
-    color: '#ef4444',
-    padding: '12px',
-    borderRadius: '6px',
-    marginBottom: '16px',
-    fontSize: '14px'
-  },
-  success: {
-    backgroundColor: '#d1fae5',
-    color: '#10b981',
-    padding: '12px',
-    borderRadius: '6px',
-    marginBottom: '16px',
-    fontSize: '14px'
-  },
-  footerText: {
-    marginTop: '24px',
-    textAlign: 'center',
-    fontSize: '14px',
-    color: '#6b7280'
-  },
-  link: {
-    color: '#3b82f6',
-    textDecoration: 'none',
-    fontWeight: '500'
-  }
-};
