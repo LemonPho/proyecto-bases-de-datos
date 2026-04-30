@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css'
 
 import Home from './components/home';
+import Login from './components/Login';
 import Dashboard from './components/DashboardAdmin';
 import Register from './components/Register';
 
@@ -11,8 +12,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/admin" element={<Dashboard/>}/>
-        <Route path="/registro" element={<Register/>}/>
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Register />} />
+        <Route path="/admin" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   )

@@ -25,8 +25,8 @@ INSERT INTO contactos (direccion_id, telefono, email, nombre, tipo_usuario)
 SELECT
     d.id,
     LPAD((3310000000 + rn)::text, 10, '0'),
-    'contacto' || rn || '@correo.com',
-    'Contacto ' || rn,
+    (ARRAY['juan.perez', 'maria.g', 'carlos_l', 'ana.m', 'luis.rodriguez', 'laura_h', 'pedro.gomez', 'sofia.d', 'jorge_morales', 'marta.r'])[rn % 10 + 1] || '@correo.com',
+    (ARRAY['Juan Pérez', 'María García', 'Carlos López', 'Ana Martínez', 'Luis Rodríguez', 'Laura Hernández', 'Pedro Gómez', 'Sofía Díaz', 'Jorge Morales', 'Marta Romero'])[rn % 10 + 1],
     CASE
         WHEN rn <= 2 THEN 'refugio'
         WHEN rn <= 4 THEN 'empleado'
@@ -43,13 +43,13 @@ FROM (
 -- cargos (10)
 INSERT INTO cargos (nombre_cargo, descripcion)
 SELECT
-    'Cargo ' || gs,
-    'Descripción del cargo ' || gs
+    (ARRAY['Veterinario', 'Asistente', 'Recepcionista', 'Limpieza', 'Entrenador', 'Cuidador', 'Administrador', 'Coordinador', 'Adopciones', 'Marketing'])[gs % 10 + 1],
+    'Descripción detallada del puesto dentro del refugio'
 FROM generate_series(1, 10) AS gs;
 
 -- categorias_eventos (10)
 INSERT INTO categorias_eventos (nombre_categoria)
-SELECT 'Categoria ' || gs
+SELECT (ARRAY['Recaudación', 'Campaña Adopción', 'Vacunación', 'Educación', 'Voluntariado', 'Socialización', 'Día Abierto', 'Entrenamiento', 'Aniversario', 'Caminata'])[gs % 10 + 1]
 FROM generate_series(1, 10) AS gs;
 
 -- especies (10) -> repetimos valores del ENUM porque solo tiene 6
@@ -62,10 +62,6 @@ FROM (
         ('ave'::especie_nombre_enum),
         ('reptil'::especie_nombre_enum),
         ('roedor'::especie_nombre_enum),
-        ('otro'::especie_nombre_enum),
-        ('perro'::especie_nombre_enum),
-        ('gato'::especie_nombre_enum),
-        ('ave'::especie_nombre_enum),
         ('otro'::especie_nombre_enum)
 ) AS t(val);
 
@@ -110,7 +106,7 @@ FROM generate_series(1, 10) AS gs;
 -- refugios (10)
 INSERT INTO refugios (nombre, contacto_id)
 SELECT
-    'Refugio ' || rn,
+    (ARRAY['Patitas Felices', 'Hogar Toby', 'Esperanza', 'Amigos Caninos', 'San Francisco', 'Huellitas', 'Casa del Gato', 'Santuario Animal', 'Nueva Vida', 'Protectores'])[rn % 10 + 1],
     id
 FROM (
     SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS rn
@@ -191,7 +187,7 @@ ON c.rn = d.rn;
 INSERT INTO razas (especie_id, nombre_raza)
 SELECT
     (SELECT id FROM especies ORDER BY random() LIMIT 1),
-    'Raza ' || gs
+    (ARRAY['Mestizo', 'Labrador Retriever', 'Pastor Alemán', 'Golden', 'Bulldog', 'Poodle', 'Beagle', 'Siamés', 'Persa', 'Angora'])[gs % 10 + 1]
 FROM generate_series(1, 10) AS gs;
 
 -- proveedores (10)
@@ -215,7 +211,7 @@ INSERT INTO animales (area_id, raza_id, nombre, estado, fecha_ingreso)
 SELECT
     (SELECT id FROM areas_refugio ORDER BY random() LIMIT 1),
     (SELECT id FROM razas ORDER BY random() LIMIT 1),
-    'Animal ' || gs,
+    (ARRAY['Max', 'Luna', 'Bella', 'Charlie', 'Milo', 'Lucy', 'Bailey', 'Cooper', 'Daisy', 'Sadie', 'Rocky', 'Buddy', 'Stella', 'Tucker', 'Bear', 'Zoey', 'Duke', 'Penny', 'Chloe', 'Oliver'])[gs % 20 + 1],
     CASE (gs % 7)
         WHEN 0 THEN 'sano'::animal_estado_enum
         WHEN 1 THEN 'enfermo'::animal_estado_enum
