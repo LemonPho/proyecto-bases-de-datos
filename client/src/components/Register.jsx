@@ -1,6 +1,6 @@
 import logo from '../assets/logo.png';
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Register() {
@@ -12,6 +12,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -20,18 +21,10 @@ export default function Register() {
     setSuccess('');
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nombre,
-            telefono,
-          },
-        },
+      await signUp(email, password, {
+        nombre,
+        telefono,
       });
-
-      if (error) throw error;
 
       setSuccess('Registro exitoso. Serás redirigido en breve...');
       setTimeout(() => {

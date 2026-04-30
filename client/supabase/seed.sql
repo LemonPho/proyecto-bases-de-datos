@@ -62,10 +62,6 @@ FROM (
         ('ave'::especie_nombre_enum),
         ('reptil'::especie_nombre_enum),
         ('roedor'::especie_nombre_enum),
-        ('otro'::especie_nombre_enum),
-        ('perro'::especie_nombre_enum),
-        ('gato'::especie_nombre_enum),
-        ('ave'::especie_nombre_enum),
         ('otro'::especie_nombre_enum)
 ) AS t(val);
 
