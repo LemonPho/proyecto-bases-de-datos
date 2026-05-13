@@ -9,6 +9,8 @@ import RefugiosAdmin from './components/admin/refugios/RefugiosAdmin';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminHome from './components/admin/AdminHome';
 import RefugioDetalles from './components/admin/refugios/RefugioDetalles';
+import InventarioAdmin from './components/admin/inventario/InventarioAdmin';
+import InventarioDetalles from './components/admin/inventario/InventarioDetalles';
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
           <Route index element={<AdminHome />} />
           <Route path="refugio" element={<RefugiosAdmin />} />
           <Route path="refugio/:id" element={<RefugioDetalles />} />
+          <Route path="inventario" element={<InventarioAdmin/>} />
+          <Route path="inventario/:id" element={<InventarioDetalles/>} />
 
         </Route>
       </Routes>
