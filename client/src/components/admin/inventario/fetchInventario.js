@@ -160,16 +160,18 @@ export async function getTipoSuministro() {
 }
 
 // Función para añadir una nuevo tipo de suministro
-export async function createTipoSuministro() {
+export async function createTipoSuministro(nombreTipo, descripcion) {
   const { data, error } = await supabase
-  .from("tipos_suministro")
-  .insert({
-    nombre_tipo : nombreTipo,
-    descripcion : descripcion || null,
-  })
+    .from("tipos_suministro")
+    .insert({
+      nombre_tipo: nombreTipo,
+      descripcion: descripcion || null,
+    })
+    .select("id, nombre_tipo")
+    .single();
 
   if (error) {
-    console.error("Error creando tipo de suministro:", error)
+    console.error("Error creando tipo de suministro:", error);
     throw new Error("No se pudo crear la nueva categoría de suministro");
   }
 

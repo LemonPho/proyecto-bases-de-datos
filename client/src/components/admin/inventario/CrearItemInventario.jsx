@@ -82,7 +82,7 @@ export default function CrearitemInventario({ isOpen, onClose, onCreated }) {
           return;
         }
 
-        const nuevoTipo = await createItemSuministro(
+        const nuevoTipo = await createTipoSuministro(
           formData.nuevoTipoNombre,
           formData.nuevoTipoDescripcion
         );
@@ -110,7 +110,7 @@ export default function CrearitemInventario({ isOpen, onClose, onCreated }) {
     }
   }
   return (
-    <div className="fixed inset-0 z-50 flex item-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-xl rounded-3xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
           <div>
@@ -231,7 +231,7 @@ export default function CrearitemInventario({ isOpen, onClose, onCreated }) {
              </div>
           </div>
 
-          <div>
+          <div className="mt-6 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -243,7 +243,7 @@ export default function CrearitemInventario({ isOpen, onClose, onCreated }) {
             <button
               type="submit"
               disabled={saving || loadingOptions}
-              className="rounded-full px-6 py-3 text-sm font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-50"
+              className="rounded-full bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-700 active:scale-95 disabled:opacity-50"
             >
               {saving ? "Guardando..." : "Guardar producto"}
             </button>
