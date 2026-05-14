@@ -33,8 +33,7 @@ export default function Login() {
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
       <div className="mb-8 flex flex-col items-center">
         <img src={logo} alt="Logo" className="w-40 h-auto" />
-        <span className="text-3xl font-black text-slate-800 tracking-tighter mt-2">migo</span>
-      </div>
+        </div>
 
       <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
         <h2 className="text-2xl font-bold text-slate-800 mb-8 text-center">Inicia Sesión</h2>

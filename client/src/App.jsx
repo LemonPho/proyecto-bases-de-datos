@@ -12,6 +12,11 @@ import RefugioDetalles from './components/admin/refugios/RefugioDetalles';
 import InventarioAdmin from './components/admin/inventario/InventarioAdmin';
 import InventarioDetalles from './components/admin/inventario/InventarioDetalles';
 
+import AnimalesAdmin from './components/admin/animales/AnimalesAdmin';
+import CrearAnimal from './components/admin/animales/CrearAnimal';
+import AnimalDetalles from './components/admin/animales/AnimalDetalles';
+import EditarAnimal from './components/admin/animales/EditarAnimal';
+
 function App() {
   return (
     <BrowserRouter>
@@ -25,7 +30,12 @@ function App() {
           <Route path="refugio/:id" element={<RefugioDetalles />} />
           <Route path="inventario" element={<InventarioAdmin/>} />
           <Route path="inventario/:id" element={<InventarioDetalles/>} />
-
+          
+          <Route path="animales" element={<AnimalesAdmin />} />
+          <Route path="animales/nuevo" element={<CrearAnimal />} />
+          <Route path="animales/:id" element={<AnimalDetalles />} />
+          <Route path="animales/editar/:id" element={<EditarAnimal />} />
+          
         </Route>
       </Routes>
     </BrowserRouter>
