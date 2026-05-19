@@ -13,8 +13,6 @@ import InventarioAdmin from './components/admin/inventario/InventarioAdmin';
 import InventarioDetalles from './components/admin/inventario/InventarioDetalles';
 import UsuariosAdmin from './components/admin/usuarios/UsuariosAdmin';
 import UsuarioDetalles from './components/admin/usuarios/UsuarioDetalles';
-import AnimalesAdmin from './components/admin/animales/AnimalesAdmin';
-import AnimalDetalles from './components/admin/animales/AnimalDetalles';
 import AdopcionesAdmin from './components/admin/adopciones/AdopcionesAdmin';
 import SolicitudDetalles from './components/admin/adopciones/SolicitudDetalles';
 import RescatesAdmin from './components/admin/rescates/RescatesAdmin';
@@ -24,6 +22,11 @@ import DonacionDetalles from './components/admin/finanzas/DonacionDetalles';
 import GastoDetalles from './components/admin/finanzas/GastoDetalles';
 import RecursosAdmin from './components/admin/recursos/RecursosAdmin';
 import EmpleadoDetalles from './components/admin/recursos/EmpleadoDetalles';
+
+import AnimalesAdmin from './components/admin/animales/AnimalesAdmin';
+import CrearAnimal from './components/admin/animales/CrearAnimal';
+import AnimalDetalles from './components/admin/animales/AnimalDetalles';
+import EditarAnimal from './components/admin/animales/EditarAnimal';
 
 function App() {
   return (
@@ -40,8 +43,6 @@ function App() {
           <Route path="inventario/:id" element={<InventarioDetalles/>} />
           <Route path="usuario" element={<UsuariosAdmin/>} />
           <Route path="usuario/:id" element={<UsuarioDetalles/>} />
-          <Route path="animales" element={<AnimalesAdmin/>} />
-          <Route path="animales/:id" element={<AnimalDetalles/>} />
           <Route path="adopciones" element={<AdopcionesAdmin/>} />
           <Route path="adopciones/:id" element={<SolicitudDetalles/>} />
           <Route path="rescates" element={<RescatesAdmin/>} />
@@ -50,8 +51,12 @@ function App() {
           <Route path="finanzas/donacion/:id" element={<DonacionDetalles/>} />
           <Route path="finanzas/gasto/:id" element={<GastoDetalles/>} />
           <Route path="recursos" element={<RecursosAdmin/>} />
-          <Route path="recursos/:id" element={<EmpleadoDetalles/>} />
-
+          <Route path="recursos/:id" element={<EmpleadoDetalles/>} />          
+          <Route path="animales" element={<AnimalesAdmin />} />
+          <Route path="animales/nuevo" element={<CrearAnimal />} />
+          <Route path="animales/:id" element={<AnimalDetalles />} />
+          <Route path="animales/editar/:id" element={<EditarAnimal />} />
+          
         </Route>
       </Routes>
     </BrowserRouter>

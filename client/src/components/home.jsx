@@ -11,18 +11,17 @@ export default function Home() {
       console.error('Error al cerrar sesión:', error);
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Navbar con las secciones del PDF */}
       <nav className="flex justify-between items-center p-6 bg-white shadow-sm">
-        <div className="text-2xl font-bold text-slate-800">migo</div>
-        <div className="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-600">
+
+        <div className="hidden md:flex space-x-8 text-sm font-semibold text-slate-600">
           <a href="#">Animales</a> {/* [cite: 3] */}
           <a href="#">Sobre nosotras</a> {/* [cite: 4] */}
           <a href="#">Eventos</a> {/* [cite: 5] */}
           <a href="#">Contacto</a> {/* [cite: 6] */}
-          
           {/* Sección de autenticación */}
           <div className="flex items-center gap-4 border-l pl-8 border-slate-200">
             {user ? (
@@ -45,7 +44,7 @@ export default function Home() {
                 Iniciar sesión
               </Link>
             )}
-          </div>
+          </div>        
         </div>
       </nav>
 
@@ -63,7 +62,6 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Placeholder para la imagen del perro del PDF */}
         <div className="md:w-1/2 mt-12 md:mt-0 flex justify-center">
           <div className="w-96 h-96 bg-green-100 rounded-[3rem] rotate-3 overflow-hidden shadow-xl flex items-center justify-center">
              <span className="text-slate-400 font-bold -rotate-3 text-center p-4">Imagen del perrito Migo [cite: 1]</span>
