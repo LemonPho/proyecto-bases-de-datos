@@ -9,7 +9,7 @@ export default function AdminHome() {
     { id: "recursos", label: "recursos humanos", color: "bg-pink-100" },
     { id: "inventario", label: "inventario", color: "bg-yellow-100" },
     { id: "rescates", label: "rescates", color: "bg-red-100" },
-    { id: "usuarios", label: "usuarios", color: "bg-teal-100" },
+    { id: "usuario", label: "usuarios", color: "bg-teal-100" },
   ];
 
   return (

@@ -1,54 +1,46 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getUsuarios } from "./fetch";
-import CrearUsuario from "./CrearUsuario";
+import { getAnimales, ESTADOS_ANIMAL } from "./fetch";
+import CrearAnimal from "./CrearAnimal";
 
-const TIPO_COLORES = {
-  adoptante: "bg-blue-100 text-blue-700",
-  empleado: "bg-green-100 text-green-700",
-  voluntario: "bg-yellow-100 text-yellow-700",
-  donante: "bg-purple-100 text-purple-700",
-  rescatista: "bg-orange-100 text-orange-700",
-  refugio: "bg-slate-100 text-slate-700",
-  admin: "bg-red-100 text-red-700",
+const ESTADO_COLORES = {
+  sano: "bg-green-100 text-green-700",
+  enfermo: "bg-red-100 text-red-700",
+  en_tratamiento: "bg-amber-100 text-amber-700",
+  recuperacion: "bg-blue-100 text-blue-700",
+  adoptado: "bg-purple-100 text-purple-700",
+  resguardado: "bg-slate-100 text-slate-700",
+  fallecido: "bg-zinc-200 text-zinc-700",
 };
 
-export default function UsuariosAdmin() {
-  const [usuarios, setUsuarios] = useState([]);
+export default function AnimalesAdmin() {
+  const [animales, setAnimales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [filtroEstado, setFiltroEstado] = useState("todos");
 
   useEffect(() => {
-    fetchUsuarios();
+    fetchAnimales();
   }, []);
 
-  async function fetchUsuarios() {
+  async function fetchAnimales() {
     setErrorMessage("");
     setLoading(true);
-    const response = await getUsuarios();
+    const response = await getAnimales();
     setLoading(false);
     setErrorMessage(response.errorMessage);
-    setUsuarios(response.data);
+    setAnimales(response.data);
   }
 
-  function formatDireccion(direccion) {
-    if (!direccion) return "Sin dirección";
-    return `${direccion.calle} ${direccion.no_ext}, ${direccion.colonia}, ${direccion.ciudad}`;
-  }
-
-  const tiposUnicos = ["todos", ...new Set(usuarios.map((u) => u.tipo_usuario))];
-
-  const usuariosFiltrados =
-    filtroTipo === "todos"
-      ? usuarios
-      : usuarios.filter((u) => u.tipo_usuario === filtroTipo);
+  const animalesFiltrados =
+    filtroEstado === "todos"
+      ? animales
+      : animales.filter((a) => a.estado === filtroEstado);
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-10">
       <div className="mx-auto max-w-6xl">
-        {/* Header */}
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <Link
@@ -59,11 +51,11 @@ export default function UsuariosAdmin() {
             </Link>
 
             <h1 className="mt-3 text-3xl font-extrabold text-slate-800">
-              Administración de Usuarios
+              Administración de Animales
             </h1>
 
             <p className="mt-1 text-sm font-medium text-slate-400">
-              Gestiona los contactos y roles registrados en el sistema.
+              Gestiona los animales registrados en los refugios.
             </p>
           </div>
 
@@ -72,52 +64,50 @@ export default function UsuariosAdmin() {
             onClick={() => setIsCreateModalOpen(true)}
             className="rounded-full bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 active:scale-95"
           >
-            + Nuevo usuario
+            + Nuevo animal
           </button>
         </div>
 
-        {/* Filtro por tipo */}
-        {!loading && !errorMessage && usuarios.length > 0 && (
+        {!loading && !errorMessage && animales.length > 0 && (
           <div className="mb-5 flex flex-wrap gap-2">
-            {tiposUnicos.map((tipo) => (
+            {["todos", ...ESTADOS_ANIMAL].map((estado) => (
               <button
-                key={tipo}
+                key={estado}
                 type="button"
-                onClick={() => setFiltroTipo(tipo)}
+                onClick={() => setFiltroEstado(estado)}
                 className={`rounded-full px-4 py-1.5 text-xs font-bold capitalize transition ${
-                  filtroTipo === tipo
+                  filtroEstado === estado
                     ? "bg-slate-800 text-white"
                     : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-100"
                 }`}
               >
-                {tipo === "todos" ? "Todos" : tipo}
+                {estado === "todos" ? "Todos" : estado.replace("_", " ")}
               </button>
             ))}
           </div>
         )}
 
-        {/* Tabla */}
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           {loading ? (
             <div className="p-8 text-center text-sm font-semibold text-slate-400">
-              Cargando usuarios...
+              Cargando animales...
             </div>
           ) : errorMessage ? (
             <div className="p-8 text-center">
               <p className="text-sm font-semibold text-red-500">{errorMessage}</p>
               <button
                 type="button"
-                onClick={fetchUsuarios}
+                onClick={fetchAnimales}
                 className="mt-4 rounded-full bg-slate-800 px-5 py-2 text-sm font-bold text-white hover:bg-slate-700"
               >
                 Reintentar
               </button>
             </div>
-          ) : usuariosFiltrados.length === 0 ? (
+          ) : animalesFiltrados.length === 0 ? (
             <div className="p-8 text-center text-sm font-semibold text-slate-400">
-              {filtroTipo === "todos"
-                ? "No hay usuarios registrados todavía."
-                : `No hay usuarios con el tipo "${filtroTipo}".`}
+              {filtroEstado === "todos"
+                ? "No hay animales registrados todavía."
+                : `No hay animales con estado "${filtroEstado}".`}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -125,52 +115,62 @@ export default function UsuariosAdmin() {
                 <thead className="bg-slate-100 text-xs uppercase tracking-widest text-slate-500">
                   <tr>
                     <th className="px-6 py-4 font-black">Nombre</th>
-                    <th className="px-6 py-4 font-black">Tipo</th>
-                    <th className="px-6 py-4 font-black">Teléfono</th>
-                    <th className="px-6 py-4 font-black">Email</th>
-                    <th className="px-6 py-4 font-black">Dirección</th>
+                    <th className="px-6 py-4 font-black">Especie / Raza</th>
+                    <th className="px-6 py-4 font-black">Estado</th>
+                    <th className="px-6 py-4 font-black">Refugio / Área</th>
+                    <th className="px-6 py-4 font-black">Ingreso</th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {usuariosFiltrados.map((usuario) => (
+                  {animalesFiltrados.map((animal) => (
                     <tr
-                      key={usuario.id}
-                      className="transition hover:bg-blue-50"
+                      key={animal.id}
+                      className="transition hover:bg-orange-50"
                     >
                       <td className="px-6 py-4">
                         <Link
-                          to={`/admin/usuario/${usuario.id}`}
-                          className="font-extrabold text-slate-800 hover:text-blue-700"
+                          to={`/admin/animales/${animal.id}`}
+                          className="font-extrabold text-slate-800 hover:text-orange-700"
                         >
-                          {usuario.nombre}
+                          {animal.nombre || "Sin nombre"}
                         </Link>
                         <p className="mt-1 text-xs text-slate-400">
-                          ID: {usuario.id.slice(0, 8)}...
+                          ID: {animal.id.slice(0, 8)}...
+                        </p>
+                      </td>
+
+                      <td className="px-6 py-4 text-slate-600">
+                        <p className="font-semibold capitalize">
+                          {animal.raza?.especie?.nombre_especie || "Sin especie"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {animal.raza?.nombre_raza || "Sin raza"}
                         </p>
                       </td>
 
                       <td className="px-6 py-4">
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-bold capitalize ${
-                            TIPO_COLORES[usuario.tipo_usuario] ??
+                            ESTADO_COLORES[animal.estado] ??
                             "bg-slate-100 text-slate-600"
                           }`}
                         >
-                          {usuario.tipo_usuario}
+                          {animal.estado.replace("_", " ")}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 text-slate-500">
-                        {usuario.telefono || "Sin teléfono"}
+                      <td className="px-6 py-4 text-slate-600">
+                        <p className="font-semibold">
+                          {animal.area?.refugio?.nombre || "Sin refugio"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {animal.area?.nombre_area || "Sin área"}
+                        </p>
                       </td>
 
                       <td className="px-6 py-4 text-slate-500">
-                        {usuario.email || "Sin email"}
-                      </td>
-
-                      <td className="max-w-xs px-6 py-4 text-slate-500">
-                        {formatDireccion(usuario.direccion)}
+                        {animal.fecha_ingreso || "Sin fecha"}
                       </td>
                     </tr>
                   ))}
@@ -181,10 +181,10 @@ export default function UsuariosAdmin() {
         </div>
       </div>
 
-      <CrearUsuario
+      <CrearAnimal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreated={() => fetchUsuarios()}
+        onCreated={() => fetchAnimales()}
       />
     </div>
   );

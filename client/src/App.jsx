@@ -11,6 +11,19 @@ import AdminHome from './components/admin/AdminHome';
 import RefugioDetalles from './components/admin/refugios/RefugioDetalles';
 import InventarioAdmin from './components/admin/inventario/InventarioAdmin';
 import InventarioDetalles from './components/admin/inventario/InventarioDetalles';
+import UsuariosAdmin from './components/admin/usuarios/UsuariosAdmin';
+import UsuarioDetalles from './components/admin/usuarios/UsuarioDetalles';
+import AnimalesAdmin from './components/admin/animales/AnimalesAdmin';
+import AnimalDetalles from './components/admin/animales/AnimalDetalles';
+import AdopcionesAdmin from './components/admin/adopciones/AdopcionesAdmin';
+import SolicitudDetalles from './components/admin/adopciones/SolicitudDetalles';
+import RescatesAdmin from './components/admin/rescates/RescatesAdmin';
+import RescateDetalles from './components/admin/rescates/RescateDetalles';
+import FinanzasAdmin from './components/admin/finanzas/FinanzasAdmin';
+import DonacionDetalles from './components/admin/finanzas/DonacionDetalles';
+import GastoDetalles from './components/admin/finanzas/GastoDetalles';
+import RecursosAdmin from './components/admin/recursos/RecursosAdmin';
+import EmpleadoDetalles from './components/admin/recursos/EmpleadoDetalles';
 
 function App() {
   return (
@@ -25,6 +38,19 @@ function App() {
           <Route path="refugio/:id" element={<RefugioDetalles />} />
           <Route path="inventario" element={<InventarioAdmin/>} />
           <Route path="inventario/:id" element={<InventarioDetalles/>} />
+          <Route path="usuario" element={<UsuariosAdmin/>} />
+          <Route path="usuario/:id" element={<UsuarioDetalles/>} />
+          <Route path="animales" element={<AnimalesAdmin/>} />
+          <Route path="animales/:id" element={<AnimalDetalles/>} />
+          <Route path="adopciones" element={<AdopcionesAdmin/>} />
+          <Route path="adopciones/:id" element={<SolicitudDetalles/>} />
+          <Route path="rescates" element={<RescatesAdmin/>} />
+          <Route path="rescates/:id" element={<RescateDetalles/>} />
+          <Route path="finanzas" element={<FinanzasAdmin/>} />
+          <Route path="finanzas/donacion/:id" element={<DonacionDetalles/>} />
+          <Route path="finanzas/gasto/:id" element={<GastoDetalles/>} />
+          <Route path="recursos" element={<RecursosAdmin/>} />
+          <Route path="recursos/:id" element={<EmpleadoDetalles/>} />
 
         </Route>
       </Routes>

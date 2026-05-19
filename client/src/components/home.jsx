@@ -30,7 +30,7 @@ export default function Home() {
                 <Link to="/admin" className="font-bold text-slate-800 hover:text-slate-900 transition-colors">
                   {user.user_metadata?.nombre?.split(' ')[0] || 'Cuenta'}
                 </Link>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="text-slate-400 hover:text-red-500 transition-colors"
                   title="Cerrar sesión"

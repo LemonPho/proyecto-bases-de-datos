@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getRefugioById, updateRefugio } from "./fetch";
+import {
+  getRefugioById,
+  updateRefugio,
+  getAreasByRefugio,
+  deleteArea,
+} from "./fetch";
+import CrearArea from "../shared/CrearArea";
 
 export default function RefugioDetalles() {
   const { id } = useParams();
@@ -28,9 +34,57 @@ export default function RefugioDetalles() {
     pais: "",
   });
 
+  const [areas, setAreas] = useState([]);
+  const [loadingAreas, setLoadingAreas] = useState(false);
+  const [areasErrorMessage, setAreasErrorMessage] = useState("");
+  const [isAreaModalOpen, setIsAreaModalOpen] = useState(false);
+  const [areaToEdit, setAreaToEdit] = useState(null);
+  const [deletingAreaId, setDeletingAreaId] = useState(null);
+
   useEffect(() => {
     fetchRefugio();
+    fetchAreas();
   }, [id]);
+
+  async function fetchAreas() {
+    setLoadingAreas(true);
+    setAreasErrorMessage("");
+    const response = await getAreasByRefugio(id);
+    setLoadingAreas(false);
+    if (response.errorMessage) {
+      setAreasErrorMessage(response.errorMessage);
+    } else {
+      setAreas(response.data);
+    }
+  }
+
+  function handleOpenCreateArea() {
+    setAreaToEdit(null);
+    setIsAreaModalOpen(true);
+  }
+
+  function handleOpenEditArea(area) {
+    setAreaToEdit(area);
+    setIsAreaModalOpen(true);
+  }
+
+  async function handleDeleteArea(area) {
+    const confirmed = window.confirm(
+      `¿Eliminar el área "${area.nombre_area}"? Esta acción no se puede deshacer.`
+    );
+    if (!confirmed) return;
+
+    setDeletingAreaId(area.id);
+    setAreasErrorMessage("");
+    const response = await deleteArea(area.id);
+    setDeletingAreaId(null);
+
+    if (response.errorMessage) {
+      setAreasErrorMessage(response.errorMessage);
+      return;
+    }
+    fetchAreas();
+  }
 
   async function fetchRefugio() {
     setLoading(true);
@@ -430,7 +484,101 @@ export default function RefugioDetalles() {
             </section>
           </div>
         </form>
+
+        <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-extrabold text-slate-800">
+                Áreas del refugio
+              </h2>
+              <p className="mt-1 text-sm font-medium text-slate-400">
+                Espacios físicos donde se alojan los animales.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleOpenCreateArea}
+              className="rounded-full bg-slate-800 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 active:scale-95"
+            >
+              + Nueva área
+            </button>
+          </div>
+
+          {areasErrorMessage && (
+            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+              {areasErrorMessage}
+            </div>
+          )}
+
+          <div className="mt-6">
+            {loadingAreas ? (
+              <p className="text-center text-sm font-semibold text-slate-400">
+                Cargando áreas...
+              </p>
+            ) : areas.length === 0 ? (
+              <p className="text-center text-sm font-semibold text-slate-400">
+                Este refugio aún no tiene áreas registradas.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead className="bg-slate-100 text-xs uppercase tracking-widest text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3 font-black">Nombre</th>
+                      <th className="px-4 py-3 font-black">Capacidad máxima</th>
+                      <th className="px-4 py-3 font-black text-right">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {areas.map((area) => (
+                      <tr key={area.id} className="hover:bg-green-50">
+                        <td className="px-4 py-3 font-bold text-slate-800">
+                          {area.nombre_area}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {area.capacidad_maxima}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditArea(area)}
+                              className="rounded-full px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteArea(area)}
+                              disabled={deletingAreaId === area.id}
+                              className="rounded-full px-3 py-1 text-xs font-bold text-red-600 ring-1 ring-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {deletingAreaId === area.id
+                                ? "Eliminando..."
+                                : "Eliminar"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
+
+      <CrearArea
+        isOpen={isAreaModalOpen}
+        onClose={() => setIsAreaModalOpen(false)}
+        onSaved={() => fetchAreas()}
+        refugioId={id}
+        area={areaToEdit}
+      />
     </div>
   );
 }
