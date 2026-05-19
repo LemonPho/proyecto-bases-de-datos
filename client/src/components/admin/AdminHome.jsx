@@ -11,16 +11,17 @@ import {
   UserCog 
 } from "lucide-react";
 
+
 export default function AdminHome() {
   const AREAS = [
-    { id: "refugio", label: "refugio", color: "bg-green-100" },
-    { id: "finanzas", label: "finanzas", color: "bg-blue-100" },
-    { id: "animales", label: "animales", color: "bg-orange-100" },
-    { id: "adopciones", label: "adopciones", color: "bg-purple-100" },
-    { id: "recursos", label: "recursos humanos", color: "bg-pink-100" },
-    { id: "inventario", label: "inventario", color: "bg-yellow-100" },
-    { id: "rescates", label: "rescates", color: "bg-red-100" },
-    { id: "usuario", label: "usuarios", color: "bg-teal-100" },
+    { id: "refugio", label: "refugio", color: "bg-green-100", icon:Home },
+    { id: "finanzas", label: "finanzas", color: "bg-blue-100", icon:CircleDollarSign },
+    { id: "animales", label: "animales", color: "bg-orange-100", icon:PawPrint },
+    { id: "adopciones", label: "adopciones", color: "bg-purple-100", icon:HeartHandshake },
+    { id: "recursos", label: "recursos humanos", color: "bg-pink-100", icon:Users },
+    { id: "inventario", label: "inventario", color: "bg-yellow-100", icon:PackageOpen },
+    { id: "rescates", label: "rescates", color: "bg-red-100", icon:Ambulance },
+    { id: "usuario", label: "usuarios", color: "bg-teal-100", icon:UserCog },
   ];
 
   return (
@@ -35,7 +36,7 @@ export default function AdminHome() {
 
       <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
         {AREAS.map((area) => {
-          const IconComponent = area.Icon;
+          const IconComponent = area.icon;
 
           return (
             <Link
