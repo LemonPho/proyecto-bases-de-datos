@@ -10,6 +10,7 @@ const TIPO_COLORES = {
   donante: "bg-purple-100 text-purple-700",
   rescatista: "bg-orange-100 text-orange-700",
   refugio: "bg-slate-100 text-slate-700",
+  admin: "bg-red-100 text-red-700",
 };
 
 export default function UsuariosAdmin() {

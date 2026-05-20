@@ -46,55 +46,10 @@ export async function createRefugio(formData) {
     errorMessage: "",
   };
 
-  const {
-    nombreRefugio,
-    nombreContacto,
-    telefono,
-    email,
-    calle,
-    noExt,
-    noInt,
-    colonia,
-    ciudad,
-    estado,
-    pais,
-  } = formData;
+  const { nombreRefugio, contactoId } = formData;
 
-  const { data: direccionData, error: direccionError } = await supabase
-    .from("direcciones")
-    .insert({
-      calle,
-      no_ext: noExt,
-      no_int: noInt || null,
-      colonia,
-      ciudad,
-      estado,
-      pais,
-    })
-    .select("id")
-    .single();
-
-  if (direccionError) {
-    console.error("Error creando dirección:", direccionError);
-    response.errorMessage = "No se pudo crear la dirección del refugio.";
-    return response;
-  }
-
-  const { data: contactoData, error: contactoError } = await supabase
-    .from("contactos")
-    .insert({
-      direccion_id: direccionData.id,
-      telefono,
-      email,
-      nombre: nombreContacto,
-      tipo_usuario: "refugio",
-    })
-    .select("id")
-    .single();
-
-  if (contactoError) {
-    console.error("Error creando contacto:", contactoError);
-    response.errorMessage = "No se pudo crear el contacto del refugio.";
+  if (!contactoId) {
+    response.errorMessage = "Debes seleccionar un contacto.";
     return response;
   }
 
@@ -102,7 +57,7 @@ export async function createRefugio(formData) {
     .from("refugios")
     .insert({
       nombre: nombreRefugio,
-      contacto_id: contactoData.id,
+      contacto_id: contactoId,
     })
     .select(`
       id,
@@ -134,6 +89,19 @@ export async function createRefugio(formData) {
 
   response.data = refugioData;
   return response;
+}
+
+export async function getContactos() {
+  const { data, error } = await supabase
+    .from("contactos")
+    .select("id, nombre, email, tipo_usuario")
+    .order("nombre", { ascending: true });
+
+  if (error) {
+    console.error("Error obteniendo contactos:", error);
+    return [];
+  }
+  return data || [];
 }
 
 export async function getRefugioById(id) {
@@ -173,6 +141,94 @@ export async function getRefugioById(id) {
     response.errorMessage = "No se pudo cargar la información del refugio.";
   } else {
     response.data = data;
+  }
+
+  return response;
+}
+
+export async function getAreasByRefugio(refugioId) {
+  const response = { data: [], errorMessage: "" };
+
+  const { data, error } = await supabase
+    .from("areas_refugio")
+    .select("id, refugio_id, nombre_area, capacidad_maxima")
+    .eq("refugio_id", refugioId)
+    .order("nombre_area", { ascending: true });
+
+  if (error) {
+    console.error("Error cargando áreas:", error);
+    response.errorMessage = "No se pudieron cargar las áreas del refugio.";
+  } else {
+    response.data = data || [];
+  }
+
+  return response;
+}
+
+export async function createArea(formData) {
+  const response = { data: null, errorMessage: "" };
+  const { refugioId, nombreArea, capacidadMaxima } = formData;
+
+  const { data, error } = await supabase
+    .from("areas_refugio")
+    .insert({
+      refugio_id: refugioId,
+      nombre_area: nombreArea,
+      capacidad_maxima: parseInt(capacidadMaxima, 10),
+    })
+    .select("id, refugio_id, nombre_area, capacidad_maxima")
+    .single();
+
+  if (error) {
+    console.error("Error creando área:", error);
+    response.errorMessage = "No se pudo crear el área del refugio.";
+    return response;
+  }
+
+  response.data = data;
+  return response;
+}
+
+export async function updateArea(id, formData) {
+  const response = { data: null, errorMessage: "" };
+  const { nombreArea, capacidadMaxima } = formData;
+
+  const { data, error } = await supabase
+    .from("areas_refugio")
+    .update({
+      nombre_area: nombreArea,
+      capacidad_maxima: parseInt(capacidadMaxima, 10),
+    })
+    .eq("id", id)
+    .select("id, refugio_id, nombre_area, capacidad_maxima")
+    .single();
+
+  if (error) {
+    console.error("Error actualizando área:", error);
+    response.errorMessage = "No se pudo actualizar el área.";
+    return response;
+  }
+
+  response.data = data;
+  return response;
+}
+
+export async function deleteArea(id) {
+  const response = { errorMessage: "" };
+
+  const { error } = await supabase
+    .from("areas_refugio")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error eliminando área:", error);
+    if (error.code === "23503") {
+      response.errorMessage =
+        "No se puede eliminar el área porque tiene animales registrados.";
+    } else {
+      response.errorMessage = "No se pudo eliminar el área.";
+    }
   }
 
   return response;

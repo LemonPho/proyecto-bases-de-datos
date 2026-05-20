@@ -1,7 +1,7 @@
 import { supabase } from "../../../lib/supabase";
 
 // Tipos de usuario válidos y su tabla de rol correspondiente
-export const TIPOS_USUARIO = ["adoptante", "empleado", "voluntario", "donante", "rescatista", "refugio"];
+export const TIPOS_USUARIO = ["adoptante", "empleado", "voluntario", "donante", "rescatista", "refugio", "admin"];
 
 const TABLA_POR_TIPO = {
   adoptante: "adoptantes",
@@ -85,6 +85,19 @@ export async function getUsuarioById(id) {
   return response;
 }
 
+export async function getContactos() {
+  const { data, error } = await supabase
+    .from("contactos")
+    .select("id, nombre, email, tipo_usuario")
+    .order("nombre", { ascending: true });
+
+  if (error) {
+    console.error("Error obteniendo contactos:", error);
+    return [];
+  }
+  return data || [];
+}
+
 export async function createUsuario(formData) {
   const response = {
     data: null,
@@ -92,6 +105,8 @@ export async function createUsuario(formData) {
   };
 
   const {
+    contactoMode,
+    contactoExistenteId,
     nombre,
     telefono,
     email,
@@ -105,69 +120,101 @@ export async function createUsuario(formData) {
     pais,
   } = formData;
 
-  // 1. Crear dirección si se proporcionó calle
-  let direccionId = null;
+  let contactoId = null;
 
-  if (calle) {
-    const { data: direccionData, error: direccionError } = await supabase
-      .from("direcciones")
+  if (contactoMode === "existing") {
+    if (!contactoExistenteId) {
+      response.errorMessage = "Debes seleccionar un contacto existente.";
+      return response;
+    }
+
+    // Actualizar el tipo_usuario del contacto al nuevo rol
+    const { error: tipoError } = await supabase
+      .from("contactos")
+      .update({ tipo_usuario: tipoUsuario })
+      .eq("id", contactoExistenteId);
+
+    if (tipoError) {
+      console.error("Error actualizando tipo de usuario:", tipoError);
+      response.errorMessage = "No se pudo actualizar el tipo del contacto.";
+      return response;
+    }
+
+    contactoId = contactoExistenteId;
+  } else {
+    // 1. Crear dirección si se proporcionó calle
+    let direccionId = null;
+
+    if (calle) {
+      const { data: direccionData, error: direccionError } = await supabase
+        .from("direcciones")
+        .insert({
+          calle,
+          no_ext: noExt,
+          no_int: noInt || null,
+          colonia,
+          ciudad,
+          estado,
+          pais,
+        })
+        .select("id")
+        .single();
+
+      if (direccionError) {
+        console.error("Error creando dirección:", direccionError);
+        response.errorMessage = "No se pudo crear la dirección del usuario.";
+        return response;
+      }
+
+      direccionId = direccionData.id;
+    }
+
+    // 2. Crear contacto
+    const { data: contactoData, error: contactoError } = await supabase
+      .from("contactos")
       .insert({
-        calle,
-        no_ext: noExt,
-        no_int: noInt || null,
-        colonia,
-        ciudad,
-        estado,
-        pais,
+        nombre,
+        telefono: telefono || null,
+        email: email || null,
+        tipo_usuario: tipoUsuario,
+        direccion_id: direccionId,
       })
       .select("id")
       .single();
 
-    if (direccionError) {
-      console.error("Error creando dirección:", direccionError);
-      response.errorMessage = "No se pudo crear la dirección del usuario.";
+    if (contactoError) {
+      console.error("Error creando contacto:", contactoError);
+      response.errorMessage = "No se pudo crear el usuario.";
       return response;
     }
-
-    direccionId = direccionData.id;
+    contactoId = contactoData.id;
   }
 
-  // 2. Crear contacto
-  const { data: contactoData, error: contactoError } = await supabase
-    .from("contactos")
-    .insert({
-      nombre,
-      telefono: telefono || null,
-      email: email || null,
-      tipo_usuario: tipoUsuario,
-      direccion_id: direccionId,
-    })
-    .select("id")
-    .single();
-
-  if (contactoError) {
-    console.error("Error creando contacto:", contactoError);
-    response.errorMessage = "No se pudo crear el usuario.";
-    return response;
-  }
-
-  // 3. Insertar en la tabla de rol si aplica
+  // 3. Insertar en la tabla de rol si aplica (idempotente)
   const tablaRol = TABLA_POR_TIPO[tipoUsuario];
 
   if (tablaRol) {
-    const { error: rolError } = await supabase
+    const { data: existente } = await supabase
       .from(tablaRol)
-      .insert({ contacto_id: contactoData.id });
+      .select("id")
+      .eq("contacto_id", contactoId)
+      .maybeSingle();
 
-    if (rolError) {
-      console.error(`Error asignando rol en ${tablaRol}:`, rolError);
-      response.errorMessage = `El usuario fue creado pero no se pudo asignar el rol de ${tipoUsuario}.`;
-      return response;
+    if (!existente) {
+      const { error: rolError } = await supabase
+        .from(tablaRol)
+        .insert({ contacto_id: contactoId });
+
+      if (rolError) {
+        console.error(`Error asignando rol en ${tablaRol}:`, rolError);
+        response.errorMessage = `El usuario fue creado pero no se pudo asignar el rol de ${tipoUsuario}.`;
+        return response;
+      }
     }
   }
 
   // 4. Devolver el usuario recién creado con todos sus datos
-  const usuarioCreado = await getUsuarioById(contactoData.id);
+  const usuarioCreado = await getUsuarioById(contactoId);
 
   if (usuarioCreado.errorMessage) {
     response.errorMessage = usuarioCreado.errorMessage;

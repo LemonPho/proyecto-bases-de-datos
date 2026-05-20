@@ -1,27 +1,33 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  getAnimalById,
-  updateAnimal,
-  ESTADOS_ANIMAL,
-  getAreasRefugio,
-  getRazas,
+  getEmpleadoById,
+  updateEmpleado,
+  getRefugios,
+  getCargos,
+  ESTATUS_EMPLEADO,
 } from "./fetch";
 
-const ESTADO_COLORES = {
-  sano: "bg-green-100 text-green-700",
-  enfermo: "bg-red-100 text-red-700",
-  en_tratamiento: "bg-amber-100 text-amber-700",
-  recuperacion: "bg-blue-100 text-blue-700",
-  adoptado: "bg-purple-100 text-purple-700",
-  resguardado: "bg-slate-100 text-slate-700",
-  fallecido: "bg-zinc-200 text-zinc-700",
+const ESTATUS_COLORES = {
+  activo: "bg-green-100 text-green-700",
+  inactivo: "bg-slate-200 text-slate-600",
+  vacaciones: "bg-blue-100 text-blue-700",
+  suspendido: "bg-amber-100 text-amber-700",
+  baja: "bg-red-100 text-red-700",
 };
 
-export default function AnimalDetalles() {
+function formatMonto(valor) {
+  if (valor === null || valor === undefined || valor === "") return "—";
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }).format(valor);
+}
+
+export default function EmpleadoDetalles() {
   const { id } = useParams();
 
-  const [animal, setAnimal] = useState(null);
+  const [empleado, setEmpleado] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [editErrorMessage, setEditErrorMessage] = useState("");
@@ -30,45 +36,48 @@ export default function AnimalDetalles() {
   const [saving, setSaving] = useState(false);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
-  const [areas, setAreas] = useState([]);
-  const [razas, setRazas] = useState([]);
+  const [refugios, setRefugios] = useState([]);
+  const [cargos, setCargos] = useState([]);
 
   const [formData, setFormData] = useState({
+    contactoId: "",
     nombre: "",
-    estado: "sano",
-    fechaIngreso: "",
-    areaId: "",
-    razaId: "",
+    telefono: "",
+    email: "",
+    refugioId: "",
+    cargoId: "",
+    estatus: "activo",
+    sueldoId: "",
+    sueldo: "",
   });
 
   useEffect(() => {
-    fetchAnimal();
+    fetchEmpleado();
   }, [id]);
 
   useEffect(() => {
-    if (isEditing && areas.length === 0) {
+    if (isEditing && refugios.length === 0) {
       loadOptions();
     }
   }, [isEditing]);
 
-  async function fetchAnimal() {
+  async function fetchEmpleado() {
     setLoading(true);
     setErrorMessage("");
 
     try {
-      const response = await getAnimalById(id);
+      const response = await getEmpleadoById(id);
 
       if (response.errorMessage) {
         setErrorMessage(response.errorMessage);
-        setAnimal(null);
+        setEmpleado(null);
       } else {
-        setAnimal(response.data);
+        setEmpleado(response.data);
         loadFormData(response.data);
       }
     } catch (error) {
-      console.error("Error inesperado cargando animal:", error);
-      setErrorMessage("Ocurrió un error inesperado cargando el animal.");
-      setAnimal(null);
+      console.error("Error inesperado:", error);
+      setErrorMessage("Ocurrió un error inesperado cargando el empleado.");
     } finally {
       setLoading(false);
     }
@@ -77,12 +86,12 @@ export default function AnimalDetalles() {
   async function loadOptions() {
     setLoadingOptions(true);
     try {
-      const [areasData, razasData] = await Promise.all([
-        getAreasRefugio(),
-        getRazas(),
+      const [refugiosData, cargosData] = await Promise.all([
+        getRefugios(),
+        getCargos(),
       ]);
-      setAreas(areasData || []);
-      setRazas(razasData || []);
+      setRefugios(refugiosData || []);
+      setCargos(cargosData || []);
     } catch (error) {
       console.error("Error cargando opciones:", error);
     } finally {
@@ -92,12 +101,19 @@ export default function AnimalDetalles() {
 
   function loadFormData(data) {
     if (!data) return;
+    const sueldoActual = Array.isArray(data.sueldos)
+      ? data.sueldos[0]
+      : data.sueldos;
     setFormData({
-      nombre: data.nombre || "",
-      estado: data.estado || "sano",
-      fechaIngreso: data.fecha_ingreso || "",
-      areaId: data.area_id || "",
-      razaId: data.raza_id || "",
+      contactoId: data.contacto?.id || data.contacto_id || "",
+      nombre: data.contacto?.nombre || "",
+      telefono: data.contacto?.telefono || "",
+      email: data.contacto?.email || "",
+      refugioId: data.refugio_id || "",
+      cargoId: data.cargo_id || "",
+      estatus: data.estatus || "activo",
+      sueldoId: sueldoActual?.id || "",
+      sueldo: sueldoActual?.sueldo ?? "",
     });
   }
 
@@ -107,13 +123,13 @@ export default function AnimalDetalles() {
   }
 
   function handleEditClick() {
-    loadFormData(animal);
+    loadFormData(empleado);
     setEditErrorMessage("");
     setIsEditing(true);
   }
 
   function handleCancelEdit() {
-    loadFormData(animal);
+    loadFormData(empleado);
     setEditErrorMessage("");
     setIsEditing(false);
   }
@@ -124,19 +140,19 @@ export default function AnimalDetalles() {
     setEditErrorMessage("");
 
     try {
-      const response = await updateAnimal(id, formData);
+      const response = await updateEmpleado(id, formData);
 
       if (response.errorMessage) {
         setEditErrorMessage(response.errorMessage);
         return;
       }
 
-      setAnimal(response.data);
+      setEmpleado(response.data);
       loadFormData(response.data);
       setIsEditing(false);
     } catch (error) {
-      console.error("Error inesperado actualizando animal:", error);
-      setEditErrorMessage("Ocurrió un error inesperado actualizando el animal.");
+      console.error("Error inesperado:", error);
+      setEditErrorMessage("Ocurrió un error inesperado actualizando el empleado.");
     } finally {
       setSaving(false);
     }
@@ -146,7 +162,7 @@ export default function AnimalDetalles() {
     return (
       <div className="min-h-screen bg-slate-50 p-6 md:p-10">
         <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 text-center text-sm font-semibold text-slate-400 shadow-sm ring-1 ring-slate-200">
-          Cargando información del animal...
+          Cargando información del empleado...
         </div>
       </div>
     );
@@ -160,13 +176,13 @@ export default function AnimalDetalles() {
           <div className="mt-5 flex justify-center gap-3">
             <button
               type="button"
-              onClick={fetchAnimal}
+              onClick={fetchEmpleado}
               className="rounded-full bg-slate-800 px-5 py-2 text-sm font-bold text-white hover:bg-slate-700"
             >
               Reintentar
             </button>
             <Link
-              to="/admin/animales"
+              to="/admin/recursos"
               className="rounded-full px-5 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100"
             >
               Volver
@@ -177,15 +193,11 @@ export default function AnimalDetalles() {
     );
   }
 
-  if (!animal) {
-    return (
-      <div className="min-h-screen bg-slate-50 p-6 md:p-10">
-        <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 text-center text-sm font-semibold text-slate-400 shadow-sm ring-1 ring-slate-200">
-          No se encontró el animal.
-        </div>
-      </div>
-    );
-  }
+  if (!empleado) return null;
+
+  const sueldoActual = Array.isArray(empleado.sueldos)
+    ? empleado.sueldos[0]
+    : empleado.sueldos;
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-10">
@@ -193,18 +205,18 @@ export default function AnimalDetalles() {
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <Link
-              to="/admin/animales"
+              to="/admin/recursos"
               className="text-sm font-semibold text-slate-400 hover:text-slate-600"
             >
-              ← Volver a animales
+              ← Volver a recursos humanos
             </Link>
 
             <h1 className="mt-3 text-3xl font-extrabold text-slate-800">
-              {animal.nombre || "Animal sin nombre"}
+              {empleado.contacto?.nombre || "Empleado"}
             </h1>
 
             <p className="mt-1 text-sm font-medium text-slate-400">
-              Información detallada del animal.
+              Información laboral del empleado.
             </p>
           </div>
 
@@ -220,7 +232,7 @@ export default function AnimalDetalles() {
               </button>
               <button
                 type="submit"
-                form="animal-edit-form"
+                form="empleado-edit-form"
                 disabled={saving}
                 className="rounded-full bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -233,12 +245,12 @@ export default function AnimalDetalles() {
               onClick={handleEditClick}
               className="rounded-full bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 active:scale-95"
             >
-              Editar animal
+              Editar empleado
             </button>
           )}
         </div>
 
-        <form id="animal-edit-form" onSubmit={handleSaveEdit}>
+        <form id="empleado-edit-form" onSubmit={handleSaveEdit}>
           {editErrorMessage && (
             <div className="mb-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
               {editErrorMessage}
@@ -248,127 +260,164 @@ export default function AnimalDetalles() {
           <div className="grid gap-6 lg:grid-cols-3">
             <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
               <h2 className="text-lg font-extrabold text-slate-800">
-                Información general
+                Información personal
               </h2>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <InfoItem
-                  label="Nombre"
-                  value={animal.nombre || "Sin nombre"}
+                  label="Nombre completo"
+                  value={empleado.contacto?.nombre || "Sin nombre"}
                   isEditing={isEditing}
                   name="nombre"
                   formValue={formData.nombre}
                   onChange={handleInputChange}
+                  required
                   maxLength={50}
                 />
 
                 <InfoItem
-                  label="Fecha de ingreso"
-                  value={animal.fecha_ingreso}
+                  label="Teléfono"
+                  value={empleado.contacto?.telefono || "Sin teléfono"}
                   isEditing={isEditing}
-                  name="fechaIngreso"
-                  formValue={formData.fechaIngreso}
+                  name="telefono"
+                  formValue={formData.telefono}
                   onChange={handleInputChange}
-                  type="date"
-                  required
+                  maxLength={10}
                 />
 
-                <InfoItem label="ID" value={animal.id} />
+                <InfoItem
+                  label="Email"
+                  value={empleado.contacto?.email || "Sin email"}
+                  isEditing={isEditing}
+                  name="email"
+                  formValue={formData.email}
+                  onChange={handleInputChange}
+                  type="email"
+                  maxLength={100}
+                />
+
+                <InfoItem label="ID" value={empleado.id} />
               </div>
             </section>
 
             <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="text-lg font-extrabold text-slate-800">Estado</h2>
+              <h2 className="text-lg font-extrabold text-slate-800">Sueldo</h2>
 
               <div className="mt-6">
                 {isEditing ? (
-                  <select
-                    name="estado"
-                    value={formData.estado}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500 capitalize"
-                  >
-                    {ESTADOS_ANIMAL.map((estado) => (
-                      <option key={estado} value={estado} className="capitalize">
-                        {estado.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Sueldo (MXN)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      name="sueldo"
+                      value={formData.sueldo}
+                      onChange={handleInputChange}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500"
+                    />
+                  </div>
                 ) : (
-                  <span
-                    className={`inline-block rounded-full px-3 py-1 text-xs font-bold capitalize ${
-                      ESTADO_COLORES[animal.estado] ?? "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {animal.estado.replace("_", " ")}
-                  </span>
+                  <div className="rounded-2xl bg-green-50 p-4">
+                    <p className="text-xs font-black uppercase tracking-widest text-green-700">
+                      Sueldo actual
+                    </p>
+                    <p className="mt-1 text-xl font-extrabold text-slate-800">
+                      {sueldoActual ? formatMonto(sueldoActual.sueldo) : "—"}
+                    </p>
+                  </div>
                 )}
               </div>
             </section>
 
             <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-3">
               <h2 className="text-lg font-extrabold text-slate-800">
-                Ubicación
+                Asignación
               </h2>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <label className="text-xs font-black uppercase tracking-widest text-slate-400">
-                    Refugio / Área
+                    Estatus
                   </label>
                   {isEditing ? (
                     <select
-                      name="areaId"
-                      value={formData.areaId}
+                      name="estatus"
+                      value={formData.estatus}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500 capitalize"
+                    >
+                      {ESTATUS_EMPLEADO.map((e) => (
+                        <option key={e} value={e} className="capitalize">
+                          {e}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span
+                      className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold capitalize ${
+                        ESTATUS_COLORES[empleado.estatus] ??
+                        "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {empleado.estatus || "—"}
+                    </span>
+                  )}
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Refugio
+                  </label>
+                  {isEditing ? (
+                    <select
+                      name="refugioId"
+                      value={formData.refugioId}
                       onChange={handleInputChange}
                       required
                       disabled={loadingOptions}
                       className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500"
                     >
-                      <option value="">Selecciona un área...</option>
-                      {areas.map((area) => (
-                        <option key={area.id} value={area.id}>
-                          {area.refugio?.nombre || "Sin refugio"} —{" "}
-                          {area.nombre_area}
+                      <option value="">Selecciona un refugio...</option>
+                      {refugios.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.nombre}
                         </option>
                       ))}
                     </select>
                   ) : (
                     <p className="mt-1 text-sm font-bold text-slate-700">
-                      {animal.area?.refugio?.nombre || "Sin refugio"} —{" "}
-                      {animal.area?.nombre_area || "Sin área"}
+                      {empleado.refugio?.nombre || "Sin refugio"}
                     </p>
                   )}
                 </div>
 
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <label className="text-xs font-black uppercase tracking-widest text-slate-400">
-                    Especie / Raza
+                    Cargo
                   </label>
                   {isEditing ? (
                     <select
-                      name="razaId"
-                      value={formData.razaId}
+                      name="cargoId"
+                      value={formData.cargoId}
                       onChange={handleInputChange}
                       required
                       disabled={loadingOptions}
                       className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500"
                     >
-                      <option value="">Selecciona la raza...</option>
-                      {razas.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.nombre_raza}
-                          {r.especie?.nombre_especie
-                            ? ` (${r.especie.nombre_especie})`
-                            : ""}
+                      <option value="">Selecciona un cargo...</option>
+                      {cargos.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nombre_cargo}
                         </option>
                       ))}
                     </select>
                   ) : (
-                    <p className="mt-1 text-sm font-bold text-slate-700 capitalize">
-                      {animal.raza?.especie?.nombre_especie || "Sin especie"} —{" "}
-                      {animal.raza?.nombre_raza || "Sin raza"}
+                    <p className="mt-1 text-sm font-bold text-slate-700">
+                      {empleado.cargo?.nombre_cargo || "Sin cargo"}
                     </p>
                   )}
                 </div>

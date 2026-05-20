@@ -1,11 +1,29 @@
 import { useEffect, useState } from "react";
-import { createUsuario, getContactos, TIPOS_USUARIO } from "./fetch";
+import { supabase } from "../../../lib/supabase";
 
-export default function CrearUsuario({
+const SELECT_CONTACTO = `
+  id,
+  nombre,
+  telefono,
+  email,
+  tipo_usuario,
+  direccion_id
+`;
+
+/**
+ * Modal liviano que crea un contacto (y opcionalmente su dirección).
+ * No interactúa con tablas de rol — para eso usar CrearUsuario.
+ *
+ * Props:
+ *   isOpen, onClose, onCreated(contacto)
+ *   defaultTipoUsuario: tipo asignado al nuevo contacto (default: 'otro')
+ *   lockTipoUsuario: si true, el campo de tipo queda deshabilitado
+ */
+export default function CrearContacto({
   isOpen,
   onClose,
   onCreated,
-  defaultTipoUsuario = "adoptante",
+  defaultTipoUsuario = "otro",
   lockTipoUsuario = false,
 }) {
   const INITIAL_FORM = {
@@ -23,29 +41,15 @@ export default function CrearUsuario({
   };
 
   const [formData, setFormData] = useState(INITIAL_FORM);
-  const [contactoMode, setContactoMode] = useState("new"); // 'new' | 'existing'
-  const [contactoExistenteId, setContactoExistenteId] = useState("");
-  const [contactos, setContactos] = useState([]);
-  const [loadingContactos, setLoadingContactos] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setFormData({ ...INITIAL_FORM, tipoUsuario: defaultTipoUsuario });
-      setContactoMode("new");
-      setContactoExistenteId("");
       setErrorMessage("");
-      loadContactos();
     }
   }, [isOpen, defaultTipoUsuario]);
-
-  async function loadContactos() {
-    setLoadingContactos(true);
-    const data = await getContactos();
-    setContactos(Array.isArray(data) ? data : []);
-    setLoadingContactos(false);
-  }
 
   if (!isOpen) return null;
 
@@ -60,34 +64,56 @@ export default function CrearUsuario({
     setErrorMessage("");
 
     try {
-      if (contactoMode === "existing" && !contactoExistenteId) {
-        setErrorMessage("Debes seleccionar un contacto existente.");
+      // 1. Crear dirección si se proporcionó calle
+      let direccionId = null;
+
+      if (formData.calle) {
+        const { data: direccionData, error: direccionError } = await supabase
+          .from("direcciones")
+          .insert({
+            calle: formData.calle,
+            no_ext: formData.noExt,
+            no_int: formData.noInt || null,
+            colonia: formData.colonia,
+            ciudad: formData.ciudad,
+            estado: formData.estado,
+            pais: formData.pais,
+          })
+          .select("id")
+          .single();
+
+        if (direccionError) {
+          console.error("Error creando dirección:", direccionError);
+          setErrorMessage("No se pudo crear la dirección.");
+          return;
+        }
+        direccionId = direccionData.id;
+      }
+
+      // 2. Crear contacto
+      const { data: contactoData, error: contactoError } = await supabase
+        .from("contactos")
+        .insert({
+          nombre: formData.nombre,
+          telefono: formData.telefono || null,
+          email: formData.email || null,
+          tipo_usuario: formData.tipoUsuario,
+          direccion_id: direccionId,
+        })
+        .select(SELECT_CONTACTO)
+        .single();
+
+      if (contactoError) {
+        console.error("Error creando contacto:", contactoError);
+        setErrorMessage("No se pudo crear el contacto.");
         return;
       }
 
-      const response = await createUsuario({
-        ...formData,
-        contactoMode,
-        contactoExistenteId,
-      });
-
-      if (response.errorMessage) {
-        setErrorMessage(response.errorMessage);
-        return;
-      }
-
-      setFormData(INITIAL_FORM);
-      setContactoExistenteId("");
-      setContactoMode("new");
-
-      if (onCreated) {
-        onCreated(response.data);
-      }
-
+      if (onCreated) onCreated(contactoData);
       onClose();
     } catch (error) {
-      console.error("Error inesperado creando usuario:", error);
-      setErrorMessage("Ocurrió un error inesperado creando el usuario.");
+      console.error("Error inesperado creando contacto:", error);
+      setErrorMessage("Ocurrió un error inesperado creando el contacto.");
     } finally {
       setSaving(false);
     }
@@ -95,22 +121,22 @@ export default function CrearUsuario({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-3xl rounded-3xl bg-white shadow-xl overflow-y-auto max-h-[90vh]">
+      <div className="w-full max-w-2xl overflow-y-auto max-h-[90vh] rounded-3xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
           <div>
             <h2 className="text-2xl font-extrabold text-slate-800">
-              Crear usuario
+              Crear contacto
             </h2>
             <p className="mt-1 text-sm font-medium text-slate-400">
-              Registra los datos del nuevo usuario y su rol en el sistema.
+              Captura los datos básicos del contacto.
             </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full px-3 py-1 text-2xl font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-700"
             disabled={saving}
+            className="rounded-full px-3 py-1 text-2xl font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
             ×
           </button>
@@ -123,82 +149,6 @@ export default function CrearUsuario({
             </div>
           )}
 
-          <div className="mb-6 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setContactoMode("new")}
-              className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                contactoMode === "new"
-                  ? "bg-slate-800 text-white"
-                  : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Nuevo contacto
-            </button>
-            <button
-              type="button"
-              onClick={() => setContactoMode("existing")}
-              className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                contactoMode === "existing"
-                  ? "bg-slate-800 text-white"
-                  : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Contacto existente
-            </button>
-          </div>
-
-          {contactoMode === "existing" && (
-            <div className="mb-6">
-              <label className="mb-1 block text-sm font-bold text-slate-600">
-                Contacto
-              </label>
-              <select
-                value={contactoExistenteId}
-                onChange={(e) => setContactoExistenteId(e.target.value)}
-                required
-                disabled={loadingContactos}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-slate-500"
-              >
-                <option value="">
-                  {loadingContactos ? "Cargando..." : "Selecciona un contacto..."}
-                </option>
-                {contactos.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                    {c.email ? ` — ${c.email}` : ""}
-                    {c.tipo_usuario ? ` (${c.tipo_usuario})` : ""}
-                  </option>
-                ))}
-              </select>
-
-              <div className="mt-5">
-                <label className="mb-1 block text-sm font-bold text-slate-600">
-                  Tipo de usuario
-                </label>
-                <select
-                  name="tipoUsuario"
-                  value={formData.tipoUsuario}
-                  onChange={handleChange}
-                  required
-                  disabled={lockTipoUsuario}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-500 bg-white capitalize disabled:bg-slate-50 disabled:text-slate-500"
-                >
-                  {TIPOS_USUARIO.map((tipo) => (
-                    <option key={tipo} value={tipo} className="capitalize">
-                      {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-2 text-xs font-semibold text-amber-600">
-                  ⚠ El tipo del contacto seleccionado se actualizará a "{formData.tipoUsuario}".
-                </p>
-              </div>
-            </div>
-          )}
-
-          {contactoMode === "new" && (<>
-          {/* Datos personales */}
           <h3 className="mb-3 text-xs font-black uppercase tracking-widest text-slate-400">
             Datos personales
           </h3>
@@ -244,7 +194,7 @@ export default function CrearUsuario({
                 onChange={handleChange}
                 maxLength={100}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="usuario@ejemplo.com"
+                placeholder="contacto@ejemplo.com"
               />
             </div>
 
@@ -252,24 +202,17 @@ export default function CrearUsuario({
               <label className="mb-1 block text-sm font-bold text-slate-600">
                 Tipo de usuario
               </label>
-              <select
+              <input
                 name="tipoUsuario"
                 value={formData.tipoUsuario}
                 onChange={handleChange}
-                required
                 disabled={lockTipoUsuario}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-500 bg-white capitalize disabled:bg-slate-50 disabled:text-slate-500"
-              >
-                {TIPOS_USUARIO.map((tipo) => (
-                  <option key={tipo} value={tipo} className="capitalize">
-                    {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
-                  </option>
-                ))}
-              </select>
+                maxLength={20}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-500 capitalize disabled:bg-slate-50 disabled:text-slate-500"
+              />
             </div>
           </div>
 
-          {/* Dirección */}
           <h3 className="mb-3 mt-7 text-xs font-black uppercase tracking-widest text-slate-400">
             Dirección (opcional)
           </h3>
@@ -366,7 +309,6 @@ export default function CrearUsuario({
               />
             </div>
           </div>
-          </>)}
 
           <div className="mt-8 flex justify-end gap-3">
             <button
@@ -383,7 +325,7 @@ export default function CrearUsuario({
               disabled={saving}
               className="rounded-full bg-slate-800 px-6 py-3 text-sm font-bold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Guardando..." : "Crear usuario"}
+              {saving ? "Guardando..." : "Crear contacto"}
             </button>
           </div>
         </form>
