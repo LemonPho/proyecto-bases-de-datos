@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { createRescate, getAnimales, getRescatistas } from "./fetch";
-import CrearAnimal from "../animales/CrearAnimal";
 import CrearUsuario from "../usuarios/CrearUsuario";
 
 export default function CrearRescate({ isOpen, onClose, onCreated }) {
@@ -17,7 +16,6 @@ export default function CrearRescate({ isOpen, onClose, onCreated }) {
   const [saving, setSaving] = useState(false);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isAnimalModalOpen, setIsAnimalModalOpen] = useState(false);
   const [isRescatistaModalOpen, setIsRescatistaModalOpen] = useState(false);
 
   useEffect(() => {
@@ -43,16 +41,6 @@ export default function CrearRescate({ isOpen, onClose, onCreated }) {
     } finally {
       setLoadingOptions(false);
     }
-  }
-
-  async function handleAnimalCreated(nuevoAnimal) {
-    if (!nuevoAnimal?.id) {
-      await loadOptions();
-      return;
-    }
-    const animalesData = await getAnimales();
-    setAnimales(Array.isArray(animalesData) ? animalesData : []);
-    setFormData((current) => ({ ...current, animalId: nuevoAnimal.id }));
   }
 
   async function handleRescatistaCreated(nuevoUsuario) {
@@ -129,16 +117,7 @@ export default function CrearRescate({ isOpen, onClose, onCreated }) {
 
           <div className="grid gap-5 md:grid-cols-2">
             <div className="md:col-span-2">
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-bold text-slate-600">Animal</label>
-                <button
-                  type="button"
-                  onClick={() => setIsAnimalModalOpen(true)}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  + Crear animal
-                </button>
-              </div>
+              <label className="mb-1 block text-sm font-bold text-slate-600">Animal</label>
               <select
                 name="animalId"
                 value={formData.animalId}
@@ -234,12 +213,6 @@ export default function CrearRescate({ isOpen, onClose, onCreated }) {
         </form>
       </div>
     </div>
-
-    <CrearAnimal
-      isOpen={isAnimalModalOpen}
-      onClose={() => setIsAnimalModalOpen(false)}
-      onCreated={handleAnimalCreated}
-    />
 
     <CrearUsuario
       isOpen={isRescatistaModalOpen}

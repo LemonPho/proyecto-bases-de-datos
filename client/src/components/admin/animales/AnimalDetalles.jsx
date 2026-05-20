@@ -1,193 +1,418 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { getAnimalById, deleteAnimal, agregarFoto, eliminarFoto } from "./fetchAnimales";
+import { Link, useParams } from "react-router-dom";
+import {
+  getAnimalById,
+  updateAnimal,
+  ESTADOS_ANIMAL,
+  getAreasRefugio,
+  getRazas,
+} from "./fetch";
+
+const ESTADO_COLORES = {
+  sano: "bg-green-100 text-green-700",
+  enfermo: "bg-red-100 text-red-700",
+  en_tratamiento: "bg-amber-100 text-amber-700",
+  recuperacion: "bg-blue-100 text-blue-700",
+  adoptado: "bg-purple-100 text-purple-700",
+  resguardado: "bg-slate-100 text-slate-700",
+  fallecido: "bg-zinc-200 text-zinc-700",
+};
 
 export default function AnimalDetalles() {
   const { id } = useParams();
-  const navigate = useNavigate();
+
   const [animal, setAnimal] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  // Estados para la galería
-  const [nuevaFotoUrl, setNuevaFotoUrl] = useState("");
-  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [editErrorMessage, setEditErrorMessage] = useState("");
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
+  const [areas, setAreas] = useState([]);
+  const [razas, setRazas] = useState([]);
+
+  const [formData, setFormData] = useState({
+    nombre: "",
+    estado: "sano",
+    fechaIngreso: "",
+    areaId: "",
+    razaId: "",
+  });
 
   useEffect(() => {
-    const fetchDetalles = async () => {
-      try {
-        const data = await getAnimalById(id);
-        setAnimal(data);
-      } catch (error) {
-        console.error("Error al cargar detalles:", error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetalles();
+    fetchAnimal();
   }, [id]);
 
-  const handleDelete = async () => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.")) {
-      try {
-        await deleteAnimal(id);
-        navigate("/admin/animales");
-      } catch (error) {
-        console.error("Error al eliminar:", error.message);
-        alert("Hubo un error al intentar eliminar el registro.");
+  useEffect(() => {
+    if (isEditing && areas.length === 0) {
+      loadOptions();
+    }
+  }, [isEditing]);
+
+  async function fetchAnimal() {
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await getAnimalById(id);
+
+      if (response.errorMessage) {
+        setErrorMessage(response.errorMessage);
+        setAnimal(null);
+      } else {
+        setAnimal(response.data);
+        loadFormData(response.data);
       }
-    }
-  };
-
-  // --- Funciones de la Galería ---
-  const handleAddFoto = async (e) => {
-    e.preventDefault();
-    if (!nuevaFotoUrl) return;
-    
-    setUploadingFoto(true);
-    try {
-      const nuevaFoto = await agregarFoto(id, nuevaFotoUrl);
-      // Actualizamos el estado local agregando la nueva foto al arreglo para verla de inmediato
-      setAnimal((prev) => ({
-        ...prev,
-        galeria_fotos: [...(prev.galeria_fotos || []), nuevaFoto]
-      }));
-      setNuevaFotoUrl(""); // Limpiamos el input
     } catch (error) {
-      console.error("Error al agregar foto:", error.message);
-      alert("No se pudo agregar la foto. Verifica que el enlace sea correcto.");
+      console.error("Error inesperado cargando animal:", error);
+      setErrorMessage("Ocurrió un error inesperado cargando el animal.");
+      setAnimal(null);
     } finally {
-      setUploadingFoto(false);
+      setLoading(false);
     }
-  };
+  }
 
-  const handleRemoveFoto = async (fotoId) => {
-    if (!window.confirm("¿Deseas eliminar esta foto de la galería?")) return;
-    
+  async function loadOptions() {
+    setLoadingOptions(true);
     try {
-      await eliminarFoto(fotoId);
-      // Filtramos la foto eliminada del estado local
-      setAnimal((prev) => ({
-        ...prev,
-        galeria_fotos: prev.galeria_fotos.filter((f) => f.id !== fotoId)
-      }));
+      const [areasData, razasData] = await Promise.all([
+        getAreasRefugio(),
+        getRazas(),
+      ]);
+      setAreas(areasData || []);
+      setRazas(razasData || []);
     } catch (error) {
-      console.error("Error al eliminar foto:", error.message);
-      alert("No se pudo eliminar la foto.");
+      console.error("Error cargando opciones:", error);
+    } finally {
+      setLoadingOptions(false);
     }
-  };
+  }
 
-  if (loading) return <div className="p-6">Cargando detalles...</div>;
-  if (!animal) return <div className="p-6">No se encontró el registro del animal.</div>;
+  function loadFormData(data) {
+    if (!data) return;
+    setFormData({
+      nombre: data.nombre || "",
+      estado: data.estado || "sano",
+      fechaIngreso: data.fecha_ingreso || "",
+      areaId: data.area_id || "",
+      razaId: data.raza_id || "",
+    });
+  }
+
+  function handleInputChange(event) {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  }
+
+  function handleEditClick() {
+    loadFormData(animal);
+    setEditErrorMessage("");
+    setIsEditing(true);
+  }
+
+  function handleCancelEdit() {
+    loadFormData(animal);
+    setEditErrorMessage("");
+    setIsEditing(false);
+  }
+
+  async function handleSaveEdit(event) {
+    event.preventDefault();
+    setSaving(true);
+    setEditErrorMessage("");
+
+    try {
+      const response = await updateAnimal(id, formData);
+
+      if (response.errorMessage) {
+        setEditErrorMessage(response.errorMessage);
+        return;
+      }
+
+      setAnimal(response.data);
+      loadFormData(response.data);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error inesperado actualizando animal:", error);
+      setEditErrorMessage("Ocurrió un error inesperado actualizando el animal.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+        <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 text-center text-sm font-semibold text-slate-400 shadow-sm ring-1 ring-slate-200">
+          Cargando información del animal...
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+        <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+          <p className="text-sm font-semibold text-red-500">{errorMessage}</p>
+          <div className="mt-5 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={fetchAnimal}
+              className="rounded-full bg-slate-800 px-5 py-2 text-sm font-bold text-white hover:bg-slate-700"
+            >
+              Reintentar
+            </button>
+            <Link
+              to="/admin/animales"
+              className="rounded-full px-5 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100"
+            >
+              Volver
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!animal) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+        <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 text-center text-sm font-semibold text-slate-400 shadow-sm ring-1 ring-slate-200">
+          No se encontró el animal.
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6 flex justify-between items-center">
-        <Link to="/admin/animales" className="text-blue-600 hover:underline font-bold text-sm">
-          &larr; Volver al listado
-        </Link>
-        <div className="flex gap-4">
-          <Link to={`/admin/animales/editar/${id}`} className="text-blue-600 font-bold text-sm hover:underline">
-            Editar Registro
-          </Link>
-          <button onClick={handleDelete} className="text-red-600 font-bold text-sm hover:underline">
-            Eliminar Registro
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow overflow-hidden border border-slate-200">
-        <div className="p-6 border-b border-slate-100 bg-slate-50">
-          <h1 className="text-3xl font-black text-slate-800">
-            {animal.nombre || 'Sin nombre registrado'}
-          </h1>
-          <p className="text-slate-500 font-medium mt-1">ID: {animal.id}</p>
-        </div>
-
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Especie y Raza</h3>
-            <p className="text-slate-800 font-medium text-lg">
-              {animal.razas?.especies?.nombre_especie} - {animal.razas?.nombre_raza}
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Estado Actual</h3>
-            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">
-              {animal.estado.replace('_', ' ')}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Ubicación en Refugio</h3>
-            <p className="text-slate-800 font-medium text-lg">{animal.areas_refugio?.nombre_area}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Fecha de Ingreso</h3>
-            <p className="text-slate-800 font-medium text-lg">
-              {new Date(animal.fecha_ingreso).toLocaleDateString('es-MX', {
-                year: 'numeric', month: 'long', day: 'numeric'
-              })}
-            </p>
-          </div>
-        </div>
-
-        {/* =========================================
-            SECCIÓN DE GALERÍA DE FOTOS
-        ========================================= */}
-        <div className="p-6 border-t border-slate-200 bg-white">
-          <h2 className="text-xl font-black text-slate-800 mb-4">Galería de Fotos</h2>
-
-          {/* Formulario para agregar nueva foto */}
-          <form onSubmit={handleAddFoto} className="mb-6 flex gap-2">
-            <input
-              type="url"
-              placeholder="Ej. https://images.unsplash.com/photo-perrito..."
-              value={nuevaFotoUrl}
-              onChange={(e) => setNuevaFotoUrl(e.target.value)}
-              className="flex-1 border border-slate-300 rounded-md p-2 text-sm focus:outline-none focus:border-blue-500"
-              required
-            />
-            <button
-              type="submit"
-              disabled={uploadingFoto}
-              className="bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-900 font-bold text-sm disabled:opacity-50"
+            <Link
+              to="/admin/animales"
+              className="text-sm font-semibold text-slate-400 hover:text-slate-600"
             >
-              {uploadingFoto ? "Guardando..." : "Añadir Foto"}
-            </button>
-          </form>
+              ← Volver a animales
+            </Link>
 
-          {/* Grid de imágenes */}
-          {animal.galeria_fotos && animal.galeria_fotos.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {animal.galeria_fotos.map((foto) => (
-                <div key={foto.id} className="relative group rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-100 aspect-square">
-                  <img
-                    src={foto.url_foto}
-                    alt={`Foto de ${animal.nombre}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.target.src = "https://via.placeholder.com/300?text=Error+de+Imagen"; }}
-                  />
-                  {/* Botón eliminar que aparece al pasar el mouse (hover) */}
-                  <button
-                    onClick={() => handleRemoveFoto(foto.id)}
-                    className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-md"
-                    title="Eliminar foto"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
+            <h1 className="mt-3 text-3xl font-extrabold text-slate-800">
+              {animal.nombre || "Animal sin nombre"}
+            </h1>
+
+            <p className="mt-1 text-sm font-medium text-slate-400">
+              Información detallada del animal.
+            </p>
+          </div>
+
+          {isEditing ? (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={saving}
+                className="rounded-full px-6 py-3 text-sm font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="animal-edit-form"
+                disabled={saving}
+                className="rounded-full bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Guardando..." : "Guardar cambios"}
+              </button>
             </div>
           ) : (
-            <div className="text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-              <p className="text-slate-500 text-sm">No hay fotos registradas para este animal.</p>
-            </div>
+            <button
+              type="button"
+              onClick={handleEditClick}
+              className="rounded-full bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 active:scale-95"
+            >
+              Editar animal
+            </button>
           )}
         </div>
-        {/* ========================================= */}
 
+        <form id="animal-edit-form" onSubmit={handleSaveEdit}>
+          {editErrorMessage && (
+            <div className="mb-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+              {editErrorMessage}
+            </div>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+              <h2 className="text-lg font-extrabold text-slate-800">
+                Información general
+              </h2>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <InfoItem
+                  label="Nombre"
+                  value={animal.nombre || "Sin nombre"}
+                  isEditing={isEditing}
+                  name="nombre"
+                  formValue={formData.nombre}
+                  onChange={handleInputChange}
+                  maxLength={50}
+                />
+
+                <InfoItem
+                  label="Fecha de ingreso"
+                  value={animal.fecha_ingreso}
+                  isEditing={isEditing}
+                  name="fechaIngreso"
+                  formValue={formData.fechaIngreso}
+                  onChange={handleInputChange}
+                  type="date"
+                  required
+                />
+
+                <InfoItem label="ID" value={animal.id} />
+              </div>
+            </section>
+
+            <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <h2 className="text-lg font-extrabold text-slate-800">Estado</h2>
+
+              <div className="mt-6">
+                {isEditing ? (
+                  <select
+                    name="estado"
+                    value={formData.estado}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500 capitalize"
+                  >
+                    {ESTADOS_ANIMAL.map((estado) => (
+                      <option key={estado} value={estado} className="capitalize">
+                        {estado.replace("_", " ")}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span
+                    className={`inline-block rounded-full px-3 py-1 text-xs font-bold capitalize ${
+                      ESTADO_COLORES[animal.estado] ?? "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {animal.estado.replace("_", " ")}
+                  </span>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-3">
+              <h2 className="text-lg font-extrabold text-slate-800">
+                Ubicación
+              </h2>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Refugio / Área
+                  </label>
+                  {isEditing ? (
+                    <select
+                      name="areaId"
+                      value={formData.areaId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={loadingOptions}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500"
+                    >
+                      <option value="">Selecciona un área...</option>
+                      {areas.map((area) => (
+                        <option key={area.id} value={area.id}>
+                          {area.refugio?.nombre || "Sin refugio"} —{" "}
+                          {area.nombre_area}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="mt-1 text-sm font-bold text-slate-700">
+                      {animal.area?.refugio?.nombre || "Sin refugio"} —{" "}
+                      {animal.area?.nombre_area || "Sin área"}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Especie / Raza
+                  </label>
+                  {isEditing ? (
+                    <select
+                      name="razaId"
+                      value={formData.razaId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={loadingOptions}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500"
+                    >
+                      <option value="">Selecciona la raza...</option>
+                      {razas.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.nombre_raza}
+                          {r.especie?.nombre_especie
+                            ? ` (${r.especie.nombre_especie})`
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="mt-1 text-sm font-bold text-slate-700 capitalize">
+                      {animal.raza?.especie?.nombre_especie || "Sin especie"} —{" "}
+                      {animal.raza?.nombre_raza || "Sin raza"}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+        </form>
       </div>
+    </div>
+  );
+}
+
+function InfoItem({
+  label,
+  value,
+  isEditing = false,
+  name,
+  formValue,
+  onChange,
+  required = false,
+  type = "text",
+  maxLength,
+}) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+        {label}
+      </label>
+
+      {isEditing ? (
+        <input
+          type={type}
+          name={name}
+          value={formValue}
+          onChange={onChange}
+          required={required}
+          maxLength={maxLength}
+          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-500"
+        />
+      ) : (
+        <p className="mt-1 break-words text-sm font-bold text-slate-700">
+          {value}
+        </p>
+      )}
     </div>
   );
 }

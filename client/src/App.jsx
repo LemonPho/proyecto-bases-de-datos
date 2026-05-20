@@ -24,9 +24,7 @@ import RecursosAdmin from './components/admin/recursos/RecursosAdmin';
 import EmpleadoDetalles from './components/admin/recursos/EmpleadoDetalles';
 
 import AnimalesAdmin from './components/admin/animales/AnimalesAdmin';
-import CrearAnimal from './components/admin/animales/CrearAnimal';
 import AnimalDetalles from './components/admin/animales/AnimalDetalles';
-import EditarAnimal from './components/admin/animales/EditarAnimal';
 
 function App() {
   return (
@@ -53,10 +51,8 @@ function App() {
           <Route path="recursos" element={<RecursosAdmin/>} />
           <Route path="recursos/:id" element={<EmpleadoDetalles/>} />          
           <Route path="animales" element={<AnimalesAdmin />} />
-          <Route path="animales/nuevo" element={<CrearAnimal />} />
           <Route path="animales/:id" element={<AnimalDetalles />} />
-          <Route path="animales/editar/:id" element={<EditarAnimal />} />
-          
+
         </Route>
       </Routes>
     </BrowserRouter>
